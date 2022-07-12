@@ -93,7 +93,7 @@ ufw enable
    printf "\nEnter ihrc-bak (backup) user's password: \n"
    passwd ihrc-bak
    printf "\nEnter ihrc-med (media)  user's password: \n"
-   passwd ihrc-bak
+   passwd ihrc-med
    printf "\n"
 #
 
