@@ -11,14 +11,14 @@
 #
 #        IHRC.SSH.conf
 #        IHRC.Nginx-RTMP.conf #using port 1935
-#
+#        
 #        testsetup000.sh
 #
 #     =======>
 #     /home
-#        /ihrcdata (group)
-#           /backup     -> bak-user
-#           /media      -> med-user
+#        /ihrcdata      -> drwxr-xr-x  4  ihrcdata  ihrcdata
+#           /backup     -> drwxrws---  2   ihrc-bak ihrc-bak
+#           /media      -> drwxrws---  2   ihrc-med ihrc-med
 #              /Seagate
 
 
@@ -29,16 +29,16 @@ IHRC_DIR=$PWD #save github pull dir in case it's ever changed
 # Perform updates & install all required packages for the rest of the process
    apt update && apt upgrade -y && mandb
 
-   apt install -y git curl
-   apt install -y pwgen
-   apt install -y tree
-
-   #servers
-   apt install -y openssh-server
-   apt install -y nginx libnginx-mod-rtmp
-   apt install -y docker #for jellyfin server
-   apt install -y samba
-   apt install -y qbittorrent-nox
+   apt install -y              \
+      git curl                 \
+      pwgen                    \
+      tree                     \
+      `#SERVERS`               \
+      openssh-server           \
+      nginx libnginx-mod-rtmp  \
+      docker                   \
+      samba                    \
+      qbittorrent-nox
 #
 # Bash Startup:
    cd $IHRC_DIR
@@ -47,8 +47,6 @@ IHRC_DIR=$PWD #save github pull dir in case it's ever changed
 #
 # Enble firewall if not already active
 ufw enable
-
-
 #
 # Configure SSH
    cd $IHRC_DIR
@@ -61,8 +59,8 @@ ufw enable
    #apply config
    cp IHRC.SSH.conf /etc/ssh/sshd_config.d/
    printf "Setting selected port number in /etc/ssh/sshd_config.d/IHRC.SSH.conf: \n"
-   sed -i -E "s/\\\$SSH_PORT_NUMBER/$SSH_PORT_NUMBER/gm" /etc/ssh/sshd_config.d/IHRC.SSH.conf
-   grep "Port" /etc/ssh/sshd_config.d/IHRC.SSH.conf
+   sed --in-place --regexp-extended "s/\\\$SSH_PORT_NUMBER/$SSH_PORT_NUMBER/gm" /etc/ssh/sshd_config.d/IHRC.SSH.conf
+   grep --perl-regexp "^\s*Port" /etc/ssh/sshd_config.d/IHRC.SSH.conf
    printf "\n"
 
    #change firewall rules
@@ -70,23 +68,34 @@ ufw enable
    ufw allow $SSH_PORT_NUMBER/tcp comment "SSH TCP Port"
 
    systemctl enable ssh --now
-
-   ufw status
-   printf "\n"
-   systemctl status ssh
 #
-# Configure NGINX-Rtmp
+# Configure NGINX-Rtmp on port 1935
    cd $IHRC_DIR
    systemctl disable nginx --now
-   
+
    cp IHRC.Nginx-RTMP.conf /etc/nginx/nginx.conf
    nginx -t
    ufw allow 1935
 
    systemctl enable nginx --now
-   systemctl status nginx
 #
+# Create media server file structure + users + group assignments + fstab
+   useradd --system --shell /usr/sbin/nologin ihrc-bak
+   useradd --system --shell /usr/sbin/nologin ihrc-med
 
+   mkdir --mode=755 ihrcdata && ch ihrcdata
+
+   mkdir --mode=2770 backup && chown ihrc-bak backup && chgrp ihrc-bak backup #2770 => d rwx rws --- 
+   mkdir --mode=2770 media  && chown ihrc-med media  && chgrp ihrc-med media  #2770 => d rwx rws --- 
+
+
+   #set passwords for backup and media:
+   printf "\nEnter ihrc-bak (backup) user's password: \n"
+   passwd ihrc-bak
+   printf "\nEnter ihrc-med (media)  user's password: \n"
+   passwd ihrc-bak
+   printf "\n"
+#
 
 # #qbittorrent web UI: port 8085
 # cd $IHRC_DIR
@@ -95,3 +104,14 @@ ufw enable
 
 # systemctl daemon-reload
 # systemctl enable qbittorrent.service
+# systemctl start qbittorrent.service
+# ufw allow 8085
+
+
+#print statuses
+   printf "\n"
+   ufw status
+   printf "\n"
+   systemctl status nginx
+   printf "\n"
+   systemctl status ssh
