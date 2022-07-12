@@ -46,6 +46,7 @@ IHRC_DIR=$PWD #save github pull dir in case it's ever changed
    apt update && apt upgrade -y && mandb
 
    apt install -y              \
+      vim                      \
       git curl                 \
       pwgen                    \
       tree                     \
@@ -63,7 +64,7 @@ IHRC_DIR=$PWD #save github pull dir in case it's ever changed
          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
       apt update
-      apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+      apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 #
 # Bash Startup:
    cd $IHRC_DIR
@@ -141,7 +142,7 @@ ufw enable
    chown qbittorrent-user:ihrc-med /home/ihrcdata/media/Seagate/seedbox
 
    cd $IHRC_DIR
-   cp IHRC.qbittorrent.service /etc/systemd/system/qbittorrent.service
+   cp IHRC.qbittorrent.001.service /etc/systemd/system/qbittorrent.service
    systemctl daemon-reload 
    systemctl enable qbittorrent
    systemctl start qbittorrent
@@ -187,4 +188,4 @@ ufw enable
    printf "\n" >> testsetup000.statuslog.log
    ufw status  >> testsetup000.statuslog.log
 
-   less testsetup000.statuslog.log
+   vim testsetup000.statuslog.log
