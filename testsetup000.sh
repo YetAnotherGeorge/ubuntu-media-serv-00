@@ -84,8 +84,9 @@ IHRC_DIR=$PWD #save github pull dir in case it's ever changed
    apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
    #ookla speedtest-cli install
-   curl -s https://install.speedtest.net/app/cli/install.deb.sh | sudo bash
-   apt install -y speedtest
+   wget https://install.speedtest.net/app/cli/ookla-speedtest-1.1.1-linux-x86_64.tgz
+   tar -xf ookla-speedtest-1.1.1-linux-x86_64.tgz
+   cp speedtest /usr/bin
 #
 # Bash Startup:
    cd $IHRC_DIR
