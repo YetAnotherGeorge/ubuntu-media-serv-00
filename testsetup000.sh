@@ -1,18 +1,31 @@
 #!/bin/bash
 
+# # Manual Config:
+#    # setup tplink network adapter:
+#    apt install -y network-manager net-tools
+#    vim /usr/lib/NetworkManager/conf.d/10-globally-managed-devices.conf
+#       ORIGINAL
+#          [keyfile]
+#          unmanaged-devices=*,except:type:wifi,except:type:gsm,except:type:cdma
+#       MODIFIED
+#          [keyfile]
+#          unmanaged-devices=*,except:type:ethernet,except:type:gsm,except:type:cdma
+#    # disable wifi:
+#    echo "iface wlan0 inet manual" >> /etc/network/interfaces
+#    systemctl restart NetworkManager
+   
+
 # Must be ran as root using:
-#     cd && git clone https://github.com/YetAnotherGeorge/ubuntu-media-serv-00 && cd ubuntu-media-serv-00
-#     chmod 744 testsetup000.sh && ./testsetup000.sh
+#     cd && git clone https://github.com/YetAnotherGeorge/ubuntu-media-serv-00 && cd ubuntu-media-serv-00 && bash testsetup000.sh
 #
 #     => Folder structure (INPUT):
 #     ~/bash-public
-#        RegisterColors.sh
-#        IHRC.BashConfig.001.sh
-#        
-#        IHRC.SSH.001.conf
-#        IHRC.Nginx-RTMP.001.conf #using port 1935
-#        IHRC.smb.001.conf
-#        IHRC.qbittorrent.001.service
+#        RegisterColors.sh             #bash
+#        IHRC.BashConfig.001.sh        #bash
+#        IHRC.SSH.001.conf             #SSH
+#        IHRC.Nginx-RTMP.001.conf      #Nginx-RTMP (using port 1935)
+#        IHRC.smb.001.conf             #Samba
+#        IHRC.qbittorrent.001.service  #qbittorent
 #        
 #        testsetup000.sh
 #
@@ -31,12 +44,15 @@
 #        App Data:   /home/jellfin-user
 #        Media:      /home/ihrcdata/media/
 #     ======================================================================================
-#=====================[Extra Config]=====================
-#     SSH Port          :          
-#     ihrc-bak password : 
-#     ihrc-med password : 
+#=====================[Install Config]=====================
+#       SSH Port          :    
+# user  root     password : 
+# user  NONROOT  password : 
+# user  ihrc-bak password : 
+# user  ihrc-med password : 
 # !qbittorrent-nox      : save path must be /home/ihrcdata/media/Seagate/seedbox
-#========================================================
+#==========================================================
+
 
 
 set -e # exit when any command fails
@@ -50,6 +66,7 @@ IHRC_DIR=$PWD #save github pull dir in case it's ever changed
       git curl                 \
       pwgen                    \
       tree                     \
+      lshw                     \
       `#SERVERS`               \
       openssh-server           \
       nginx libnginx-mod-rtmp  \
@@ -57,14 +74,18 @@ IHRC_DIR=$PWD #save github pull dir in case it's ever changed
       qbittorrent-nox          \
       gnupg ca-certificates lsb-release `#for docker (curl above)`
 
-      #docker install
-      sudo mkdir -p /etc/apt/keyrings
-      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-      echo \
-         "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-         $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-      apt update
-      apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+   #docker install
+   sudo mkdir -p /etc/apt/keyrings
+   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+   echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+   apt update
+   apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+   #ookla speedtest-cli install
+   curl -s https://install.speedtest.net/app/cli/install.deb.sh | sudo bash
+   apt install -y speedtest
 #
 # Bash Startup:
    cd $IHRC_DIR
@@ -90,7 +111,6 @@ ufw enable
    printf "\n"
 
    #change firewall rules
-   ufw deny 22/tcp
    ufw allow $SSH_PORT_NUMBER/tcp comment "SSH TCP Port"
 
    systemctl enable ssh --now
@@ -127,7 +147,7 @@ ufw enable
    printf "Manually Configure Seagate (must have label 'Sagate' in fstab, must be mounted on /home/ihrcdata/media/Seagate), then continue script execution...\n"
    read TMP_VARIABLE
 #
-# Samba 
+# Samba
    cd $IHRC_DIR
    cp IHRC.smb.001.conf /etc/samba/smb.conf 
    testparm
