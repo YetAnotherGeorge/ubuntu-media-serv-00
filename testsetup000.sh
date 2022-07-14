@@ -65,7 +65,7 @@ IHRC_DIR=$PWD #save github pull dir in case it's ever changed
 timedatectl set-timezone Europe/Bucharest
 
 # Perform updates & install all required packages for the rest of the process
-   apt purge samba* #in case old versions cause bugs although they probably can't 
+   apt purge -y samba* #in case old versions cause bugs although they probably can't 
    apt update && apt upgrade -y && mandb
 
    apt install -y              \
