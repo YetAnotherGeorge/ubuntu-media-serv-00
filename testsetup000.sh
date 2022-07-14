@@ -21,7 +21,6 @@
 #    sudo gedit /etc/systemd/logind.conf 
 #       HandleLidSwitch=ignore
 #       LidSwitchIgnoreInhibited=no
-TIMECTL
    
 
 # Must be ran as root using:
